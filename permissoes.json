@@ -1,16 +1,6 @@
 {
-    "usuarios": [
-        {
-            "nome": "João",
-            "permissoes": ["leitura", "escrita"]
-        },
-        {
-            "nome": "Maria",
-            "permissoes": ["leitura"]
-        },
-        {
-            "nome": "Pedro",
-            "permissoes": ["leitura", "execução"]
-        }
+    "Username": "duda",
+    "Permissions": [
+        "x"
     ]
 }
