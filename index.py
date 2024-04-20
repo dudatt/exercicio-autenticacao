@@ -1,76 +1,101 @@
-import bcrypt; #pip install bcrypt
-import json;
+import json
+import bcrypt
+import getpass
+import sys
 
-nameUser = input("Digite seu nome de usuário: ");
-senha = input("Digite sua senha: ");
+global username 
+global senha 
+global loginUser
+global loginSenha
 
-def criarUserJson(nameUser, senha):
-    return { "UserName": nameUser, "Password": senha };
+def criarUsuarioJson(username, senha): # cria o objeto usuário
+    return { "Username": username, "Password": senha }
 
-def criptografiaSenha(senha):
-    salt = bcrypt.gensalt(8)  # Gera um salt (complexidade adicional) para a criptografia. 
-    # sequência aleatória única misturada com a senha antes de ser criptorgrafada.
+def adicionarUserJson(users, username, senha): # adiciona o objeto usuário na lista 
+    usuarioNovo = criarUsuarioJson(username, senha);
+    users.append(usuarioNovo);
 
-    hashSenha = bcrypt.hashpw(senha.encode(), salt);
-    return hashSenha
-    # Cria o hash da senha combinando a senha digitada pelo usuário com o "salt" gerado.
-    #  O "encode()"" é usado para converter a senha de uma string para uma sequência de bytes, que é o formato necessário para a função "bcrypt.hashpw()".
-def salvarUserJson(users, arquivo):
+def salvarUserJson(users, arquivo): # salva a lista de usuários no arquivo json
     with open(arquivo, 'w') as f:
         json.dump(users, f);
 
-    # print(f"Senha original: {senha}")
-    # print(f"Salt gerado: {salt.decode()}")
-    # print(f"Hash da senha: {hashSenha.decode()}");
-def adicionarUserJson(users, nameUser, senha):
-    usuarioNovo = criarUserJson(nameUser, senha);
-    users.append(usuarioNovo);
+def cadastrarUsuario():
+    username = input("Digite seu nome de usuário: ")
+    senha = getpass.getpass("Digite sua nova senha: ")
 
-def criptografiaSenha(senha):
-    salt = bcrypt.gensalt(8);
+    salt = bcrypt.gensalt();
     hashSenha = bcrypt.hashpw(senha.encode(), salt);
-    return hashSenha;
 
-def autenticacao(user, senha, hashSenha):
-    print("------------------");
-    print("Login");
-    print("------------------");
-    loginUser = input("Insira seu nome de usuário: ");
-    senhaUser = input("Insira sua senha: ");
-    print("------------------");
+    hashSenha = hashSenha.decode()
 
-    if loginUser != user:
-        print("Usuário ou senha incorretos.");
+    users = []
+    arquivoUsers = "usuarios.json"
 
-def autenticacao(user, senha, hashSenha):
-    print("Tente novamente mais tarde.")
+    criarUsuarioJson(username, hashSenha)
+    adicionarUserJson(users, username, hashSenha)
+    salvarUserJson(users, arquivoUsers)
+    print("Usuário cadastrado com sucesso!")
+    print("----------------------")
+    return
 
-print(autenticacao(nameUser, senha, criptografiaSenha(senha)));
+def autenticarUsuario():
+    loginUser = input("Digite seu nome de usuário: ")
+    loginSenha = input("Digite sua senha: ")
 
-print("----------------------");
+    arquivoUsersDados = "usuarios.json"
+    with open(arquivoUsersDados, 'r') as f:
+        users = json.load(f)
+
+    for user in users:
+        if user["Username"] == loginUser:
+            if bcrypt.checkpw(loginSenha.encode(), user["Password"].encode()): #confirmação direta
+                print("Usuário autenticado com sucesso!")
+                return
+            elif loginSenha != bcrypt.checkpw(loginSenha.encode(), user["Password"].encode()): #confirmação com tentativas
+                for i in range(5):
+                    i += 1;
+
+                    if bcrypt.checkpw(loginSenha.encode(), user["Password"].encode()):
+                        print(f"Seja bem-vindo(a) {user["Username"]}!");
+                        break;
+                    else:
+                        print(f"Senha incorreta. Tente novamente. Total de tentativas ({i}/5)");
+                        print("----------------------")
+                        loginSenha = input("Insira sua senha: ");
+                        if i == 5:
+                            print("Tentativas máximas alcançadas. Tente novamente mais tarde.");
+                            sys.exit();
+        else:
+            print("Usuário não encontrado.")
+            sys.exit();
+
+def criarArquivo():
+        nomeArquivo = input("Digite o nome do arquivo: ")
+        try:
+            with open(nomeArquivo, 'w') as f:
+                print(f"Arquivo {nomeArquivo} criado com sucesso!")
+        except PermissionError:
+            print("Você não tem permissão para criar o arquivo.")
+
+print("----------------------")
 print("Escolha uma opção: ")
-print("1 - Cadastrar");
-print("2 - Autenticar");
-resp = input("3 - Sair  ");
+print("1 - Cadastrar")
+print("2 - Autenticar")
+print("3 - Sair")
+print("----------------------")
+resp = input()
+print("----------------------")
 
-if resp == "1" :
-    print("----------------------");
-    nameUser = input("Digite seu nome de usuário: ");
-    senha = input("Digite sua senha: ");
-    users = [];
-    adicionarUserJson(users, nameUser, senha);
-    print("1° parte feita");
-
+if resp == "1":
+    cadastrarUsuario()
+    
 elif resp == "2":
-    print("----------------------");
-    nameUser = input("Digite seu nome de usuário: ");
-    senha = input("Digite sua senha: ");
-    autenticacao(nameUser, senha, criptografiaSenha(senha))
-
-else:
-    print("Insira uma resposta válida.")
-
-arquivoUsers = "usuarios.json";
-salvarUserJson(users, arquivoUsers);
-
-#print(autenticacao(nameUser, senha, criptografiaSenha(senha)));
+    autenticarUsuario()
+    print("----------------------")
+    print("Comandos disponíveis: ")
+    print("1 - Criar arquivo")
+    print("2 - Sair")
+    print("----------------------")
+    resp = input()
+    print("----------------------")
+    
