@@ -4,9 +4,6 @@ import getpass
 import sys
 import os
 
-# def criarUsuarioJson(username, senha): # cria o objeto usuário
-#    return { "Username": username, "Password": senha }
-
 def adicionarUserJson(users, username, senha): # adiciona o usuário na lista 
     usuarioNovo = {"Username": username, "Password": senha};
     users.append(usuarioNovo);
@@ -22,58 +19,39 @@ def criarPermissiosJson():
         users = json.load(f)
 
     arquivoPermissao = "permissoes.json"
+    permissao = []
+     
+    print("1 - Conceder permissões")
+    print("2 - Voltar") #fazer voltar pro começo
+    resp = input()
+        
+def cadastrarUsuario():
+    username = input("Digite seu nome de usuário: ")
+    senha = getpass.getpass("Digite sua nova senha: ")
 
+    salt = bcrypt.gensalt();
+    hashSenha = bcrypt.hashpw(senha.encode(), salt);
+    hashSenha = hashSenha.decode()
 
-    for i in range(3): #ver isso aq
-        permissao = []
-        resp1 = input("Digite a permissão que deseja conceder (r, w, x): ").lower()
-        permissao.append(resp1)
-        for j in range(2):
-           resp2 = input("Mais alguma permissão? (S/N) ").upper()
-            if resp2 == "N":
-                break
-            elif resp2 == "S":
-                continue
-            else:
-                print("Opção inválida.")
-                sys.exit()
+    arquivoUsers = "usuarios.json"
+
+    try:
+        with open(arquivoUsers, 'r') as file:
+            users = json.load(file)
+    except FileNotFoundError:
+        users = []
+
+    users = adicionarUserJson(users, username, hashSenha)
 
     for user in users:
-        userPermissao = {"Username": user["Username"], "Permissions": permissao}
-
-    salvarUserJson(userPermissao, arquivoPermissao)
-
-def cadastrarUsuario():
-    while True:
-        username = input("Digite seu nome de usuário: ")
-        senha = getpass.getpass("Digite sua nova senha: ")
-
-        salt = bcrypt.gensalt();
-        hashSenha = bcrypt.hashpw(senha.encode(), salt);
-        hashSenha = hashSenha.decode()
-
-        arquivoUsers = "usuarios.json"
-
-        try:
-            with open(arquivoUsers, 'r') as file:
-                users = json.load(file)
-        except FileNotFoundError:
-            users = []
-
-        #criarUsuarioJson(username, hashSenha)
-        users = adicionarUserJson(users, username, hashSenha)
-        salvarUserJson(users, arquivoUsers)
-        criarPermissiosJson()
-        #darPermissao()
-        print("Usuário cadastrado com sucesso!")
-        print("----------------------")
-        print("Deseja cadastrar outro usuário? (S/N)")
-        resp = input().upper()
-        print("----------------------")
-        if resp == "N":
-            return False
-        elif resp == "S":
-            continue
+        if user["Username"] != username: 
+            print("Usuário cadastrado com sucesso!")
+            salvarUserJson(users, arquivoUsers)
+            criarPermissiosJson()
+        else:
+            print("----------------------")
+            print("Usuário já cadastrado.")
+            sys.exit()
 
 def autenticarUsuario():
     loginUser = input("Digite seu nome de usuário: ")
@@ -102,9 +80,6 @@ def autenticarUsuario():
                         if i == 5:
                             print("Tentativas máximas alcançadas. Tente novamente mais tarde.");
                             sys.exit();
-        else:
-            print("Usuário ou senha inválidos.")
-            sys.exit();
 
 def verificarPermissaoArquivo(arquivo): #rever isso dps
     
@@ -133,40 +108,78 @@ def criarArquivo():
         try:
             with open(nomeArquivo, 'w') as f:
                 print(f"Arquivo {nomeArquivo} criado com sucesso!")
+                return nomeArquivo
         except PermissionError:
             print("Você não tem permissão para criar o arquivo.")
 
-print("----------------------")
-print("Escolha uma opção: ")
-print("1 - Cadastrar")
-print("2 - Autenticar")
-print("3 - Sair")
-print("----------------------")
-resp = input()
-print("----------------------")
+def escreverArquivo(arquivo):
+    try:
+        with open(arquivo, 'a') as f:
+            conteudo = input("Digite o conteúdo que deseja escrever: ")
+            f.write(conteudo)
+            print(f"Conteúdo adicionado ao arquivo {arquivo} com sucesso!")
+    except FileNotFoundError:
+        print(f"Arquivo {arquivo} não encontrado.")
+    except PermissionError:
+        print(f"Você não tem permissão para escrever no arquivo {arquivo}.")
+     
+def lerArquivo():
+    nomeArquivo = input("Digite o nome do arquivo que deseja ler: ")
+    try:
+        with open(nomeArquivo, 'r') as f:
+            conteudo = f.read()
+            print(f"Conteúdo do arquivo {nomeArquivo}:")
+            print(conteudo)
+    except FileNotFoundError:
+        print(f"Arquivo {nomeArquivo} não encontrado.")
 
-if resp == "1":
-    cadastrarUsuario()
-elif resp == "2":
-    autenticarUsuario()
+def excluirArquivo():
+    nomeArquivo = input("Digite o nome do arquivo que deseja excluir: ")
+    try:
+        os.remove(nomeArquivo)
+        print(f"Arquivo {nomeArquivo} excluído com sucesso!")
+    except FileNotFoundError:
+        print(f"Arquivo {nomeArquivo} não encontrado.")
+    except PermissionError:
+        print(f"Você não tem permissão para excluir o arquivo {nomeArquivo}.")
+
+while True:
     print("----------------------")
-    print("Comandos disponíveis: ")
-    print("1 - Criar arquivo")
-    print("2 - Ler arquivo")
-    print("3 - Excluir arquivo")
-    print("4 - Executar arquivo") #extra
-    print("5 - Sair")
+    print("Escolha uma opção: ")
+    print("1 - Cadastrar")
+    print("2 - Autenticar")
+    print("3 - Sair")
     print("----------------------")
     resp = input()
     print("----------------------")
+
     if resp == "1":
-        criarArquivo()
+        cadastrarUsuario()
     elif resp == "2":
-        print("Ler arquivo")
+        autenticarUsuario()
+        while True:
+            print("----------------------")
+            print("Comandos disponíveis: ")
+            print("1 - Criar arquivo")
+            print("2 - Ler arquivo")
+            print("3 - Excluir arquivo")
+            print("4 - Voltar")
+            print("----------------------")
+            resp = input()
+            print("----------------------")
+
+            if resp == "1":
+                escreverArquivo(criarArquivo())
+            elif resp == "2":
+                lerArquivo()
+            elif resp == "3":
+                excluirArquivo()
+            elif resp == "4":
+                break
+            else:
+                print("Comando inválido.")
     elif resp == "3":
-        print("Excluir arquivo")
-    elif resp == "4":
-        print("Executar arquivo")
-    elif resp == "5":
         print("Até mais!")
         sys.exit()
+    else:
+        print("Comando inválido.")
