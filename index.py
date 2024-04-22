@@ -4,27 +4,24 @@ import getpass
 import sys
 import os
 
-def adicionarUserJson(users, username, senha): # adiciona o usuário na lista 
+def adicionarUserJson(users, username, senha):
     usuarioNovo = {"Username": username, "Password": senha};
     users.append(usuarioNovo);
     return users
 
-def salvarUserJson(users, arquivo): # salva a lista de usuários no arquivo json
+def salvarUserJson(users, arquivo):
     with open(arquivo, 'w') as f:
         json.dump(users, f, indent=4);
 
-def criarPermissiosJson():
-    arquivoUsersDados = "usuarios.json"
-    with open(arquivoUsersDados, 'r') as f:
-        users = json.load(f)
+def adicionarPermissaoJson(permissoes, username):
+    permissoesNovas = {"Username": username, "Permissions": permissoes};
+    permissoes.append(permissoesNovas);
+    return permissoes
 
-    arquivoPermissao = "permissoes.json"
-    permissao = []
-     
-    print("1 - Conceder permissões")
-    print("2 - Voltar") #fazer voltar pro começo
-    resp = input()
-        
+def salvarPermissaoJson(permissoes, arquivo):
+    with open(arquivo, 'w') as f:
+        json.dump(permissoes, f, indent=4);
+
 def cadastrarUsuario():
     username = input("Digite seu nome de usuário: ")
     senha = getpass.getpass("Digite sua nova senha: ")
@@ -41,17 +38,14 @@ def cadastrarUsuario():
     except FileNotFoundError:
         users = []
 
-    users = adicionarUserJson(users, username, hashSenha)
-
     for user in users:
-        if user["Username"] != username: 
-            print("Usuário cadastrado com sucesso!")
-            salvarUserJson(users, arquivoUsers)
-            criarPermissiosJson()
-        else:
-            print("----------------------")
+        if user["Username"] == username:
             print("Usuário já cadastrado.")
-            sys.exit()
+
+    users = adicionarUserJson(users, username, hashSenha)
+    salvarUserJson(users, arquivoUsers)
+    print("Usuário cadastrado com sucesso!")
+    print("----------------------")
 
 def autenticarUsuario():
     loginUser = input("Digite seu nome de usuário: ")
@@ -62,17 +56,22 @@ def autenticarUsuario():
         users = json.load(f)
 
     for user in users:
-        if user["Username"] == loginUser:
+        if user["Username"] != loginUser:
+            print("Usuário não encontrado.")
+            sys.exit();
+        else: #user["Username"] == loginUser:
             if bcrypt.checkpw(loginSenha.encode(), user["Password"].encode()): #confirmação direta
                 print("Usuário autenticado com sucesso!")
-                return
-            elif loginSenha != bcrypt.checkpw(loginSenha.encode(), user["Password"].encode()): #confirmação com tentativas
+                print(f"Seja bem-vindo(a) {user["Username"]}!");
+                return loginUser
+            else: #loginSenha != bcrypt.checkpw(loginSenha.encode(), user["Password"].encode()): #confirmação com tentativas
                 for i in range(5):
                     i += 1;
 
                     if bcrypt.checkpw(loginSenha.encode(), user["Password"].encode()):
+                        print("Usuário autenticado com sucesso!")
                         print(f"Seja bem-vindo(a) {user["Username"]}!");
-                        break;
+                        return loginUser
                     else:
                         print(f"Senha incorreta. Tente novamente. Total de tentativas ({i}/5)");
                         print("----------------------")
@@ -80,28 +79,6 @@ def autenticarUsuario():
                         if i == 5:
                             print("Tentativas máximas alcançadas. Tente novamente mais tarde.");
                             sys.exit();
-
-def verificarPermissaoArquivo(arquivo): #rever isso dps
-    
-    arquivoUsersDados = "usuarios.json"
-    with open(arquivoUsersDados, 'r') as f:
-        users = json.load(f)
-
-    for user in users:
-        if user["Username"].access(arquivo, user["Username"].R_OK):
-            print("Você tem permissão de leitura para o arquivo.")
-        else:
-            print("Você não tem permissão de leitura para o arquivo.")
-
-        if user["Username"].access(arquivo, user["Username"].W_OK):
-            print("Você tem permissão de escrita para o arquivo.")
-        else:
-            print("Você não tem permissão de escrita para o arquivo.")
-
-        if user["Username"].access(arquivo, user["Username"].X_OK):
-            print("Você tem permissão de execução para o arquivo.")
-        else:
-            print("Você não tem permissão de execução para o arquivo.")
 
 def criarArquivo():
         nomeArquivo = input("Digite o nome do arquivo: ")
@@ -155,29 +132,46 @@ while True:
 
     if resp == "1":
         cadastrarUsuario()
+        continue
     elif resp == "2":
-        autenticarUsuario()
-        while True:
-            print("----------------------")
-            print("Comandos disponíveis: ")
-            print("1 - Criar arquivo")
-            print("2 - Ler arquivo")
-            print("3 - Excluir arquivo")
-            print("4 - Voltar")
-            print("----------------------")
-            resp = input()
-            print("----------------------")
+        usuario = autenticarUsuario()
+        arquivoPermissoes = "permissoes.json"
+        with open(arquivoPermissoes, 'r') as f:
+            arqPermissoes = json.load(f)
 
-            if resp == "1":
-                escreverArquivo(criarArquivo())
-            elif resp == "2":
-                lerArquivo()
-            elif resp == "3":
-                excluirArquivo()
-            elif resp == "4":
-                break
-            else:
-                print("Comando inválido.")
+        while True:
+            usuarioEncontrado = False
+            for permissao in arqPermissoes:
+                if permissao["Username"] == usuario:
+                    usuarioEncontrado = True
+                    print("----------------------")
+                    print(f"Comandos disponíveis para {usuario}: ")
+                    for j in permissao["Permissions"]:
+                        perm = j
+                        if perm == "w":
+                            print("1 - Criar arquivo")
+                        elif perm == "r":
+                            print("2 - ler arquivo")
+                        elif perm == "d":
+                            print("3 - Excluir arquivo")
+                        
+                    resp = input("Digite uma opção ou digite '4' para encerrar: ")
+                    print("----------------------")
+                    if resp == "1":
+                        escreverArquivo(criarArquivo())
+                    elif resp == "2":
+                        lerArquivo()
+                    elif resp == "3":
+                        excluirArquivo()
+                    elif resp == "4":
+                        print("Até mais!")
+                        sys.exit()
+                    else:
+                        print("Comando inválido.")
+            if not usuarioEncontrado:
+                print("Usuário não possui permissões.")
+                continue 
+            
     elif resp == "3":
         print("Até mais!")
         sys.exit()
