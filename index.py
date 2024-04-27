@@ -4,21 +4,27 @@ import getpass
 import sys
 import os
 
-def adicionarUserJson(users, username, senha):
+def adicionarUsuarioJson(users, username, senha):
     usuarioNovo = {"Username": username, "Password": senha};
     users.append(usuarioNovo);
     return users
 
-def salvarUserJson(users, arquivo):
+def salvarDadosUsuariosJson(users, arquivo):
     with open(arquivo, 'w') as f:
         json.dump(users, f, indent=4);
 
-def adicionarPermissaoJson(permissoes, username):
-    permissoesNovas = {"Username": username, "Permissions": permissoes};
-    permissoes.append(permissoesNovas);
+def adicionarPermissaoUsuarioJson(permissoes, username):
+    arquivoUsuarios = "usuarios.json"
+    with open(arquivoUsuarios, 'r') as f:
+        arqUsuarios = json.load(f)
+
+    username = arqUsuarios["Username"]
+
+    UsuariosPermissoesNovas = {"Username": username, "Permissions": permissoes};
+    permissoes.append(UsuariosPermissoesNovas);
     return permissoes
 
-def salvarPermissaoJson(permissoes, arquivo):
+def salvarPermissaoUsuarioJson(permissoes, arquivo):
     with open(arquivo, 'w') as f:
         json.dump(permissoes, f, indent=4);
 
@@ -43,8 +49,8 @@ def cadastrarUsuario():
             print("Usuário já cadastrado.")
             sys.exit()
 
-    users = adicionarUserJson(users, username, hashSenha)
-    salvarUserJson(users, arquivoUsers)
+    users = adicionarUsuarioJson(users, username, hashSenha)
+    salvarDadosUsuariosJson(users, arquivoUsers)
     print("Usuário cadastrado com sucesso!")
     print("----------------------")
 
@@ -87,7 +93,6 @@ def autenticarUsuario():
     else:
         print("Usuário não encontrado.")
         sys.exit()
-
 
 def criarArquivo():
         nomeArquivo = input("Digite o nome do arquivo: ")
@@ -141,7 +146,6 @@ while True:
 
     if resp == "1":
         cadastrarUsuario()
-        #continue
     elif resp == "2":
         usuario = autenticarUsuario()
 
@@ -151,8 +155,8 @@ while True:
 
         while True:
             usuarioEncontrado = False
-            for permissao in arqPermissoes:
-                if permissao["Username"] == usuario:
+            for userEncontrado in arqPermissoes:
+                if userEncontrado["Username"] == usuario:
                     usuarioEncontrado = True
                     print("----------------------")
                     print(f"Comandos disponíveis para {usuario}: ")
@@ -162,30 +166,40 @@ while True:
                     print("4 - Sair")
                     resp = input("Digite uma opção: ")
                     print("----------------------")
-                    for j in permissao["Permissions"]:
-                        perm = j
-                        if perm != "w" and perm != "r" and perm != "d":
-                            print("Sem permissão.")
+                    for permissao in userEncontrado["Permissions"]:
+                        tiposPermissoes = permissao
+                        if tiposPermissoes not in ["w", "r", "d"]:
+                            print("Permissão inválida.")
                             break
-                        else: 
-                            if resp == "1":
+                        elif resp == "1" and tiposPermissoes == "w":
+                            if "w" in userEncontrado["Permissions"]:
                                 escreverArquivo(criarArquivo())
-                                break
-                            elif resp == "2":
-                                lerArquivo()
-                                break
-                            elif resp == "3":
-                                excluirArquivo()
-                                break
-                            elif resp == "4":
-                                print("Até mais!")
-                                sys.exit()
                             else:
-                                print("Comando inválido.")
+                                print("Sem permissão para criar arquivo.")
+                            break
+                        elif resp == "2" and tiposPermissoes == "r":
+                            if "r" in userEncontrado["Permissions"]:
+                                lerArquivo()
+                            else:
+                                print("Sem permissão para ler arquivo.")
+                            break
+                        elif resp == "3" and tiposPermissoes == "d":
+                            if "d" in userEncontrado["Permissions"]:
+                                excluirArquivo()
+                            else:
+                                print("Sem permissão para excluir arquivo.")
+                            break
+                    else:
+                        if resp == "4":
+                            print("Até mais!")
+                            sys.exit()
+                        else:
+                            print("Sem permissão para executar o comando.")
+                    break
             if not usuarioEncontrado:
-                print("Usuário não possui permissões.")
-                continue 
-            
+                print("Usuário não encontrado ou não possui permissões.")
+                continue
+             
     elif resp == "3":
         print("Até mais!")
         sys.exit()
