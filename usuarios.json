@@ -1,18 +1,10 @@
 [
     {
-        "Username": "duda",
-        "Password": "$2b$12$sCtYXiwjLpuTg5RlnQbbrOWJ5Jvx8.nyPLhezdElnUQC7POpvH01S"
-    },
-    {
         "Username": "ju",
         "Password": "$2b$12$VpoAdIwVucDCFDOqXfDolO.elss9KKcrQnhZcH/AtrXCcrlasjiae"
     },
     {
-        "Username": "pedro",
-        "Password": "$2b$12$a.L0PMhvckWGOvkmfTDNa./RAo7DPqVlwfB97bxCqnZmqXe4LSvCW"
-    },
-    {
-        "Username": "jon",
-        "Password": "$2b$12$0IQEjqVIM3eAymSeYhpiS.TzSLKQcehQswaFFZidvD15nob8RQX4C"
+        "Username": "duda",
+        "Password": "$2b$12$NUFlwHqJ0zOko6OxzhRtg.uUzFYdldrDLpgdDQWjn2dft0h.12PNa"
     }
 ]

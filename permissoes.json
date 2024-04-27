@@ -1,14 +1,10 @@
 [
     {
         "Username": "duda",
-        "Permissions": ["r", "w"]
+        "Permissions": ["r", "w", "d"]
     },
     {
         "Username": "ju",
         "Permissions": ["r"]
-    },
-    {
-        "Username": "jon",
-        "Permissions": ["r","w"]
     }
 ]
