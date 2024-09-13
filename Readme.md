@@ -1,1 +1,2 @@
 # Exercício de Autenticação 
+O código utiliza `bcrypt` para hash de senhas, garantindo a segurança no armazenamento das credenciais. As permissões para operações em arquivos (criação, leitura e exclusão) são definidas por usuário e armazenadas em arquivos JSON. O sistema permite o cadastro, autenticação e controle de acesso baseado nessas permissões, protegendo as operações de arquivos de acordo com as regras definidas para cada usuário.
